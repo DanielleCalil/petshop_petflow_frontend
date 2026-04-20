@@ -1,0 +1,85 @@
+.sidebar {
+  width: 240px;
+  background: #fff;
+  min-height: 100vh;
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  padding-top: 0;
+  border-right: 1px solid hsl(218, 25%, 90%);
+}
+
+.logoArea {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 14px;
+  padding: 24px 0 16px 0;
+}
+
+.divisor {
+  width: 100%;
+  height: 1px;
+  background: #ececec;
+  margin-bottom: 12px;
+}
+
+.menuList {
+  list-style: none;
+  padding: 0;
+  width: 100%;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: stretch;
+}
+
+.menuItem {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 24px;
+  color: #4f4f4f;
+  font-weight: 600;
+  text-decoration: none;
+  font-size: 1.3rem;
+  border-radius: 1.4rem;
+  width: 70%;
+  margin: 2px auto;
+  transition:
+    background 0.2s,
+    color 0.2s;
+}
+
+.menuItem:hover {
+  background: #e7e7e7c4;
+}
+
+.active {
+  display: flex;
+  align-items: center;
+  background: #2C83ED;
+  color: #fff;
+  font-weight: 600;
+  gap: 14px;
+  padding: 14px 24px;
+  text-decoration: none;
+  font-size: 1.3rem;
+  border-radius: 1.4rem;
+  width: 70%;
+  margin: 2px auto;
+}
+
+.active .icon :global(svg) {
+  color: #fff;
+  stroke: #fff;
+}
+
+.icon {
+  font-size: 1.3rem;
+  display: flex;
+  align-items: center;
+}

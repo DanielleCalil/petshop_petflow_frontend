@@ -1,0 +1,539 @@
+.background {
+  width: 100%;
+  height: 100vh;
+  background-image: linear-gradient(135deg, #2f80ed 0%, #27ae60 100%);
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.transparencia {
+  background-color: rgba(255, 255, 255, 0.096);
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+  justify-content: center; 
+}
+
+.titulo {
+  color: #000;
+}
+
+.conteudo {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.card {
+  background-color:  #ffffffe3;
+  border-radius: 6.5rem;
+  box-shadow: 30px 30px 30px rgb(0, 0, 0);
+  overflow: hidden;
+  height: auto;
+  max-width: 65%;
+  width: 100%;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: black;
+  transition: box-shadow 0.3s ease;
+  overflow-y: auto;
+}
+
+.header {
+  text-align: center;
+  margin-top: 5rem;
+}
+
+.header h1 {
+  font-weight: 700;
+  font-size: 3.6rem;
+}
+
+.header p {
+  width: 100%;
+  max-width: 80%;
+  margin: 0 auto;
+  text-align: center;
+  font-size: 1.8rem;
+  line-height: 2.7rem;
+}
+
+.editarEdi {
+  display: flex;
+  flex-direction: row;
+  margin-right: 3rem;
+  justify-content: flex-end;
+}
+
+.tpicon {
+  margin-right: 0.313rem;
+}
+
+.perfilButton {
+  height: 4rem;
+  padding: 0.7rem 3rem;
+  margin: 1.25rem 0;
+  background-color: #fdfcfc;
+  color: rgb(5, 5, 5);
+  border: 1px #000 solid;
+  border-radius: 1.875rem;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.4rem;
+}
+
+.perfilButton:hover {
+  opacity: 0.5;
+  transition: 0.5s;
+}
+
+.main {
+  padding: 20px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  min-height: 80vh;
+}
+
+.contato {
+  font-size: 3rem;
+  font-weight: 600;
+  margin-top: 3rem;
+  margin-bottom: 0.938rem;
+  text-align: center;
+}
+
+.container {
+  max-width: 95%;
+  margin: 0 auto;
+  padding: 1.25rem;
+  box-sizing: border-box;
+}
+
+.alinhamento {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  justify-content: center;
+  text-align: center;
+}
+
+.alinhamento h1 {
+  grid-column: span 3;
+  text-align: center;
+}
+
+.Info {
+  width: 100%;
+}
+
+.Item {
+  width: 100%;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  height: auto;
+  box-sizing: border-box;
+  background: #FFF;
+  padding: 0.25rem;
+  border-radius: 0.8rem;
+  text-align: center;
+  box-shadow: 1px 2px 4px 2px rgba(0, 0, 0, 0.288);
+  margin: 0.3rem;
+}
+
+.Title {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+  color: #000;
+}
+
+.Description {
+  font-size: 1.2rem;
+  color: #555;
+  margin-bottom: 0.5rem;
+}
+
+.inputMargin {
+  margin-left: 3rem;
+  margin-right: 3rem;
+  flex: 1;
+}
+
+.titleSuperior {
+  text-align: left;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+
+.active {
+  background-color: #57bb9d!important;
+  box-shadow: inset 0 8px 14px rgba(0, 0, 0, 0.7), 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: translateY(6px);
+}
+
+.situacaoButtons {
+  transition: all 0.2s ease;
+  font-weight: 400;
+  margin-top: 1.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  justify-content: center;
+  max-width: 100%;
+  margin-bottom: 3rem;
+  cursor: pointer;
+  width: 100%;
+}
+
+.situacao {
+  width: 8.5rem;
+  height: 8.5rem;
+  box-sizing: border-box;
+  max-width: calc(16.66% - 1.25rem);
+  background: #599684;
+  padding: 0.25rem;
+  border-radius: 0.8rem;
+  text-align: center;
+  box-shadow: 1px 2px 4px 2px rgba(0, 0, 0, 0.288);
+  justify-content: center;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+}
+
+.icon {
+  height: auto;
+  width: 4rem;
+  margin-bottom: 0px;
+}
+
+.textIcon {
+  font-size: 1rem;
+  font-weight: 500;
+  margin-top: 0.4rem;
+  line-height: 1.4rem;
+}
+
+.inputField input[type="file"] {
+  display: none;
+}
+
+.buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+}
+
+.excluirTarefa {
+  height: 2.5rem;
+  padding: 0.2rem 0.9rem;
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-bottom: 0;
+  background-color: rgba(255, 0, 0, 0.753);
+  color: white;
+  border: none;
+  border-radius: 1.875rem;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: auto;
+  align-items: flex-end;
+  justify-content: flex-end;
+  display: flex;
+}
+
+.confirmarTarefa {
+  height: 3.2rem;
+  padding: 0.2rem 2rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  background-color: #047251b2;
+  color: white;
+  border: none;
+  border-radius: 1.875rem;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.editarTarefa {
+  height: 2.6rem;
+  padding: 0.3rem 0.8rem;
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  margin-right: 1rem;
+  background-color: #047251b2;
+  color: white;
+  border: none;
+  border-radius: 1.875rem;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.inputContainer {
+  width: 100%;
+  display: flex;
+  justify-content: center;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.inputGroup form {
+  width: 100%;
+}
+
+.inputField {
+  width: 100%;
+  padding: 0.8rem 2rem;
+  margin: 0.313rem 0;
+  border: 1px solid #ccc;
+  border-radius: 1.875rem;
+  box-sizing: border-box; 
+  font-size: 1.4rem; 
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+.infosInput {
+  height: 12.5rem;
+  resize: vertical;
+  margin-top: 0;
+}
+
+.inputFlex {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  width: 100%;
+}
+
+.editar {
+  margin-top: 1.5rem;
+  margin-right: 3rem;
+  flex-shrink: 0;
+}
+
+.saveButton {
+  height: 4rem;
+  padding: 0.7rem 3rem;
+  margin: 1.25rem 0;
+  background-color: #FF735C;
+  color: white;
+  border: none;
+  border-radius: 1.875rem;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  width: auto;
+}
+
+.saveButton:hover {
+  opacity: 0.5;
+  transition: 0.5s;
+}
+
+.editarb {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+.sairMenuGrande {
+  padding: 0.8rem 2rem;
+  background-color: #FFF;
+  border: 1px red solid;
+  border-radius: 30px;
+  cursor: pointer;
+  font-family: "Poppins", sans-serif;
+  font-weight: 400;
+  font-style: normal;
+  font-size: 1.6rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.sairMenuGrande {
+  color: red;
+  cursor: pointer;
+}
+
+.tpiconSair {
+  margin-right: 0.313rem;
+  color: red;
+}
+
+.membrosContainer {
+  display: flex;
+  flex-direction: row;
+  margin: 2rem;
+  margin-bottom: 3rem;
+}
+
+.membros {
+  text-align: justify;
+  margin: 2rem;
+  font-size: 1.75rem;
+  line-height: 2.5rem;
+}
+
+.imagemFlutuante {
+  float: left;
+  margin: 0.45rem 0.8rem 0.2rem 0;
+  width: 9rem;
+  border-radius: 0.7rem;
+  height: auto;
+}
+
+.nome {
+  font-family: "Poppins", sans-serif;
+  font-weight: 500;
+  font-style: normal;
+  font-size: 1.8rem;
+}
+
+.suporte {
+  margin-bottom: 3rem;
+}
+
+.email {
+  color: #FF735C;
+  text-decoration: underline;
+}
+
+.divInput {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+ .divRadio {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  gap: 2rem;
+  margin-bottom: 1rem;
+}
+
+.small {
+  color: #e74c3c;
+  font-size: 1.4rem;
+  margin-top: 0.5rem;
+  font-weight: 500;
+  margin-bottom: 1rem;
+}
+
+.select {
+  padding: 0 1rem;
+  width: 90%;
+  font-size: 1.4rem;
+  height: 5rem;
+  border-radius: 1rem;
+  border: 2px solid #7F0000;
+  color: #7F0000;
+  text-align: center;
+}
+
+.select option:focus {
+  color: #FAFAFA;
+  background-color: #7F0000;
+}
+
+.select:focus {
+  box-shadow: 0 0 0 0;
+  outline: 0;
+}
+
+.input:focus {
+  box-shadow: 0 0 0 0;
+  outline: 0;
+  border-color: #B71C1C;
+}
+
+.formControl.success input {
+  border-color: #2ecc71;
+}
+
+.formControl.error input {
+  border-color: #e74c3c;
+}
+
+.formControl.success .divInput .sucesso {
+  display: block;
+}
+
+.formControl.error .divInput .erro {
+  display: block;
+}
+
+.formControl.error small {
+  display: block;
+}
+
+.formControl.success .divInput select {
+  border-color: #2ecc71;
+}
+
+.formControl.error .divInput select {
+  border-color: #e74c3c;
+}
+
+.sucesso {
+  display: none;
+  margin-left: 0.5rem;
+  font-size: 2.7rem;
+  color: #2ecc71;
+}
+
+.erro {
+  display: none;
+  margin-left: 0.5rem;
+  font-size: 2.7rem;
+  color: #e74c3c;
+}

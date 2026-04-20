@@ -1,0 +1,27 @@
+.header {
+  width: 100%;
+  height: 72px;
+  background: #fff;
+  display: flex;
+  align-items: center;
+  border-bottom: 1px solid #ececec;
+  padding: 0 32px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  border-bottom: 1px solid hsl(218, 25%, 90%);
+}
+
+.titulo {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.pet {
+  color: #2C83ED;
+}
+
+.flow {
+  color: #28AF60;
+}
