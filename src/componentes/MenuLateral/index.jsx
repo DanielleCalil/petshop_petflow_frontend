@@ -15,7 +15,7 @@ const menuItems = [
   {
     label: "Dashboard",
     icon: <LayoutDashboard size={22} />,
-    href: "/dashboard",
+    href: "/",
   },
   { label: "Clientes", icon: <Users size={22} />, href: "/clientes" },
   { label: "Pets", icon: <PawPrint size={22} />, href: "/pets" },
