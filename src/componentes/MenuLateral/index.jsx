@@ -1,3 +1,5 @@
+"use client";
+
 import styles from "./menu.module.css";
 import {
   Users,
@@ -7,9 +9,11 @@ import {
   LayoutDashboard,
   PawPrint,
   Package,
+  LogOut,
 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 const menuItems = [
   {
@@ -30,6 +34,14 @@ const menuItems = [
 ];
 
 export default function MenuLateral({ active }) {
+  const router = useRouter();
+
+  function handleLogout() {
+    localStorage.removeItem("user");
+    localStorage.removeItem("Gerenciamento Petshop - PetFlow");
+    router.replace("/login");
+  }
+
   return (
     <aside className={styles.sidebar}>
       <div className={styles.logoArea}>
@@ -41,7 +53,7 @@ export default function MenuLateral({ active }) {
         />
       </div>
       <div className={styles.divisor} />
-      <nav>
+      <nav className={styles.navArea}>
         <ul className={styles.menuList}>
           {menuItems.map((item) => (
             <li key={item.label}>
@@ -58,6 +70,16 @@ export default function MenuLateral({ active }) {
           ))}
         </ul>
       </nav>
+      <div className={styles.logoutArea}>
+        <button
+          type="button"
+          onClick={handleLogout}
+          className={styles.logoutButton}
+        >
+          <LogOut size={20} />
+          <span>Sair</span>
+        </button>
+      </div>
     </aside>
   );
 }

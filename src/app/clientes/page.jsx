@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
 import api from "../../services/api";
@@ -66,12 +66,18 @@ function extrairClienteCriado(payload, fallback) {
   };
 }
 
+function construirEndpointCliente(idCliente) {
+  return `${CLIENTES_ENDPOINT}/${idCliente}`;
+}
+
 export default function ClientesPage() {
   const [clientes, setClientes] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
+  const [clienteEmEdicao, setClienteEmEdicao] = useState(null);
   const [formulario, setFormulario] = useState(estadoInicialFormulario);
   const [carregando, setCarregando] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [excluindoId, setExcluindoId] = useState(null);
   const [erro, setErro] = useState("");
 
   useEffect(() => {
@@ -87,20 +93,34 @@ export default function ClientesPage() {
       const lista = extrairListaClientes(response.data).map(normalizarCliente);
 
       setClientes(lista);
-    } catch {
-      // erro silenciado
+    } catch (error) {
+      console.log("Erro ao buscar clientes:", error);
     } finally {
       setCarregando(false);
     }
   }
 
   function abrirModal() {
+    setClienteEmEdicao(null);
+    setFormulario(estadoInicialFormulario);
+    setErro("");
+    setModalAberto(true);
+  }
+
+  function abrirModalEdicao(cliente) {
+    setClienteEmEdicao(cliente);
+    setFormulario({
+      nome: cliente.nome ?? "",
+      telefone: cliente.telefone ?? "",
+      email: cliente.email ?? "",
+    });
     setErro("");
     setModalAberto(true);
   }
 
   function fecharModal() {
     setModalAberto(false);
+    setClienteEmEdicao(null);
     setFormulario(estadoInicialFormulario);
     setErro("");
   }
@@ -126,15 +146,78 @@ export default function ClientesPage() {
       setSalvando(true);
       setErro("");
 
-      const response = await api.post(CLIENTES_ENDPOINT, novoCliente);
-      const clienteCriado = extrairClienteCriado(response.data, novoCliente);
+      if (clienteEmEdicao) {
+        const idCliente = clienteEmEdicao.id;
 
-      setClientes((estadoAnterior) => [...estadoAnterior, clienteCriado]);
+        if (!idCliente) {
+          setErro("Nao foi possivel identificar o cliente para edicao.");
+          return;
+        }
+
+        const response = await api.put(
+          construirEndpointCliente(idCliente),
+          novoCliente,
+        );
+        const clienteAtualizado = normalizarCliente(
+          response.data?.dados ?? response.data?.data ?? response.data ?? novoCliente,
+        );
+
+        setClientes((estadoAnterior) =>
+          estadoAnterior.map((clienteAtual) => {
+            if (clienteAtual.id !== idCliente) {
+              return clienteAtual;
+            }
+
+            return {
+              ...clienteAtual,
+              ...clienteAtualizado,
+              id: clienteAtualizado.id ?? idCliente,
+            };
+          }),
+        );
+      } else {
+        const response = await api.post(CLIENTES_ENDPOINT, novoCliente);
+        const clienteCriado = extrairClienteCriado(response.data, novoCliente);
+
+        setClientes((estadoAnterior) => [...estadoAnterior, clienteCriado]);
+      }
+
       fecharModal();
-    } catch {
-      // erro silenciado
+    } catch (error) {
+      console.log("Erro ao salvar cliente:", error);
+      setErro("Nao foi possivel salvar o cliente.");
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function excluirCliente(cliente) {
+    if (!cliente?.id) {
+      setErro("Nao foi possivel identificar o cliente para exclusao.");
+      return;
+    }
+
+    const confirmarExclusao = window.confirm(
+      `Deseja realmente excluir o cliente ${cliente.nome}?`,
+    );
+
+    if (!confirmarExclusao) {
+      return;
+    }
+
+    try {
+      setExcluindoId(cliente.id);
+      setErro("");
+
+      await api.delete(construirEndpointCliente(cliente.id));
+      setClientes((estadoAnterior) =>
+        estadoAnterior.filter((clienteAtual) => clienteAtual.id !== cliente.id),
+      );
+    } catch (error) {
+      console.log("Erro ao excluir cliente:", error);
+      setErro("Nao foi possivel excluir o cliente.");
+    } finally {
+      setExcluindoId(null);
     }
   }
 
@@ -170,19 +253,20 @@ export default function ClientesPage() {
                   <th>Nome</th>
                   <th>Telefone</th>
                   <th>Email</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
 
               <tbody>
                 {carregando ? (
                   <tr>
-                    <td colSpan="3" className={styles.estadoTabela}>
+                    <td colSpan="4" className={styles.estadoTabela}>
                       Carregando clientes...
                     </td>
                   </tr>
                 ) : clientes.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className={styles.estadoTabela}>
+                    <td colSpan="4" className={styles.estadoTabela}>
                       Nenhum cliente encontrado.
                     </td>
                   </tr>
@@ -192,6 +276,33 @@ export default function ClientesPage() {
                       <td>{cliente.nome}</td>
                       <td>{cliente.telefone}</td>
                       <td>{cliente.email}</td>
+                      <td>
+                        <div className={styles.acoesLinha}>
+                          <button
+                            type="button"
+                            className={`${styles.botaoAcao} ${styles.botaoEditar}`}
+                            onClick={() => abrirModalEdicao(cliente)}
+                            aria-label={`Editar cliente ${cliente.nome}`}
+                          >
+                            <Pencil size={16} />
+                            <span>Editar</span>
+                          </button>
+                          <button
+                            type="button"
+                            className={`${styles.botaoAcao} ${styles.botaoExcluir}`}
+                            onClick={() => excluirCliente(cliente)}
+                            disabled={excluindoId === cliente.id}
+                            aria-label={`Excluir cliente ${cliente.nome}`}
+                          >
+                            <Trash2 size={16} />
+                            <span>
+                              {excluindoId === cliente.id
+                                ? "Excluindo..."
+                                : "Excluir"}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -210,7 +321,7 @@ export default function ClientesPage() {
             role="dialog"
           >
             <div className={styles.modalHeader}>
-              <h2>Novo Cliente</h2>
+              <h2>{clienteEmEdicao ? "Editar Cliente" : "Novo Cliente"}</h2>
               <button
                 type="button"
                 className={styles.botaoFechar}
@@ -266,7 +377,11 @@ export default function ClientesPage() {
                 className={styles.botaoSalvar}
                 disabled={salvando}
               >
-                {salvando ? "Salvando..." : "Salvar"}
+                {salvando
+                  ? "Salvando..."
+                  : clienteEmEdicao
+                    ? "Atualizar"
+                    : "Salvar"}
               </button>
             </form>
           </section>

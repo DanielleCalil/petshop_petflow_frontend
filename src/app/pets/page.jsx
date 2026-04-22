@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
 import api from "../../services/api";
@@ -81,10 +81,12 @@ export default function PetsPage() {
   const [pets, setPets] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
+  const [petEmEdicao, setPetEmEdicao] = useState(null);
   const [formulario, setFormulario] = useState(estadoInicialFormulario);
   const [carregandoPets, setCarregandoPets] = useState(true);
   const [carregandoClientes, setCarregandoClientes] = useState(true);
   const [salvando, setSalvando] = useState(false);
+  const [processandoAcaoId, setProcessandoAcaoId] = useState(null);
   const [erroPets, setErroPets] = useState("");
   const [erroModal, setErroModal] = useState("");
 
@@ -103,10 +105,7 @@ export default function PetsPage() {
 
       setPets(lista);
     } catch (error) {
-      const mensagemErro =
-        error.response?.data?.mensagem ?? "Nao foi possivel carregar os pets.";
-
-      setErroPets(mensagemErro);
+      console.log("Erro ao buscar pets:", error);
     } finally {
       setCarregandoPets(false);
     }
@@ -121,22 +120,33 @@ export default function PetsPage() {
 
       setClientes(lista);
     } catch (error) {
-      const mensagemErro =
-        error.response?.data?.mensagem ?? "Nao foi possivel carregar os clientes.";
-
-      setErroModal(mensagemErro);
+      console.log("Erro ao buscar clientes:", error);
     } finally {
       setCarregandoClientes(false);
     }
   }
 
   function abrirModal() {
+    setPetEmEdicao(null);
+    setFormulario(estadoInicialFormulario);
+    setErroModal("");
+    setModalAberto(true);
+  }
+
+  function abrirModalEdicao(pet) {
+    setPetEmEdicao(pet);
+    setFormulario({
+      nome: pet.nome ?? "",
+      tipo: pet.tipo ?? "",
+      clienteId: pet.clienteId ? String(pet.clienteId) : "",
+    });
     setErroModal("");
     setModalAberto(true);
   }
 
   function fecharModal() {
     setModalAberto(false);
+    setPetEmEdicao(null);
     setFormulario(estadoInicialFormulario);
     setErroModal("");
   }
@@ -163,29 +173,92 @@ export default function PetsPage() {
       clienteId: formulario.clienteId,
     };
 
+    const endpoint = petEmEdicao?.id
+      ? `${PETS_ENDPOINT}/${petEmEdicao.id}`
+      : PETS_ENDPOINT;
+
     try {
       setSalvando(true);
       setErroModal("");
 
-      const response = await api.post(PETS_ENDPOINT, novoPet);
-      const petCriado = extrairItemCriado(
-        response.data,
-        {
-          ...novoPet,
-          dono: clienteSelecionado?.nome ?? "",
-        },
-        normalizarPet,
-      );
+      const response = petEmEdicao?.id
+        ? await api.put(endpoint, novoPet)
+        : await api.post(endpoint, novoPet);
 
-      setPets((estadoAnterior) => [...estadoAnterior, petCriado]);
+      if (petEmEdicao?.id) {
+        const petAtualizado = extrairItemCriado(
+          response.data,
+          {
+            ...petEmEdicao,
+            ...novoPet,
+            dono: clienteSelecionado?.nome ?? "",
+          },
+          normalizarPet,
+        );
+
+        setPets((estadoAnterior) =>
+          estadoAnterior.map((petAtual) =>
+            String(petAtual.id) === String(petEmEdicao.id) ? petAtualizado : petAtual,
+          ),
+        );
+      } else {
+        const petCriado = extrairItemCriado(
+          response.data,
+          {
+            ...novoPet,
+            dono: clienteSelecionado?.nome ?? "",
+          },
+          normalizarPet,
+        );
+
+        setPets((estadoAnterior) => [...estadoAnterior, petCriado]);
+      }
+
       fecharModal();
     } catch (error) {
+      console.log("Erro ao salvar pet:", error);
       const mensagemErro =
-        error.response?.data?.mensagem ?? "Nao foi possivel cadastrar o pet.";
+        error.response?.data?.mensagem ??
+        (petEmEdicao
+          ? "Nao foi possivel atualizar o pet."
+          : "Nao foi possivel cadastrar o pet.");
 
       setErroModal(mensagemErro);
     } finally {
       setSalvando(false);
+    }
+  }
+
+  async function excluirPet(pet) {
+    if (!pet?.id) {
+      setErroPets("Nao foi possivel excluir: pet sem identificador.");
+      return;
+    }
+
+    const confirmou = window.confirm(
+      `Deseja realmente excluir o pet ${pet.nome || "selecionado"}?`,
+    );
+
+    if (!confirmou) {
+      return;
+    }
+
+    try {
+      setProcessandoAcaoId(String(pet.id));
+      setErroPets("");
+
+      await api.delete(`${PETS_ENDPOINT}/${pet.id}`);
+      setPets((estadoAnterior) =>
+        estadoAnterior.filter((item) => String(item.id) !== String(pet.id)),
+      );
+    } catch (error) {
+      console.log("Erro ao excluir pet:", error);
+      const mensagemErro =
+        error.response?.data?.mensagem ?? "Nao foi possivel excluir o pet.";
+
+      setErroPets(mensagemErro);
+    } finally {
+      setProcessandoAcaoId(null);
     }
   }
 
@@ -215,19 +288,20 @@ export default function PetsPage() {
                   <th>Nome</th>
                   <th>Tipo</th>
                   <th>Dono</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
 
               <tbody>
                 {carregandoPets ? (
                   <tr>
-                    <td colSpan="3" className={styles.estadoTabela}>
+                    <td colSpan="4" className={styles.estadoTabela}>
                       Carregando pets...
                     </td>
                   </tr>
                 ) : pets.length === 0 ? (
                   <tr>
-                    <td colSpan="3" className={styles.estadoTabela}>
+                    <td colSpan="4" className={styles.estadoTabela}>
                       Nenhum pet encontrado.
                     </td>
                   </tr>
@@ -237,6 +311,35 @@ export default function PetsPage() {
                       <td>{pet.nome}</td>
                       <td>{pet.tipo}</td>
                       <td>{pet.dono}</td>
+                      <td>
+                        <div className={styles.acoesTabela}>
+                          <button
+                            type="button"
+                            className={styles.botaoAcaoEditar}
+                            onClick={() => abrirModalEdicao(pet)}
+                            disabled={processandoAcaoId === String(pet.id)}
+                            aria-label={`Editar pet ${pet.nome}`}
+                          >
+                            <Pencil size={16} />
+                            <span>Editar</span>
+                          </button>
+
+                          <button
+                            type="button"
+                            className={styles.botaoAcaoExcluir}
+                            onClick={() => excluirPet(pet)}
+                            disabled={processandoAcaoId === String(pet.id)}
+                            aria-label={`Excluir pet ${pet.nome}`}
+                          >
+                            <Trash2 size={16} />
+                            <span>
+                              {processandoAcaoId === String(pet.id)
+                                ? "Excluindo..."
+                                : "Excluir"}
+                            </span>
+                          </button>
+                        </div>
+                      </td>
                     </tr>
                   ))
                 )}
@@ -255,7 +358,7 @@ export default function PetsPage() {
             role="dialog"
           >
             <div className={styles.modalHeader}>
-              <h2>Novo Pet</h2>
+              <h2>{petEmEdicao ? "Editar Pet" : "Novo Pet"}</h2>
               <button
                 type="button"
                 className={styles.botaoFechar}
@@ -317,7 +420,13 @@ export default function PetsPage() {
               </label>
 
               <button type="submit" className={styles.botaoSalvar} disabled={salvando}>
-                {salvando ? "Salvando..." : "Salvar"}
+                {salvando
+                  ? petEmEdicao
+                    ? "Atualizando..."
+                    : "Salvando..."
+                  : petEmEdicao
+                    ? "Atualizar"
+                    : "Salvar"}
               </button>
             </form>
           </section>

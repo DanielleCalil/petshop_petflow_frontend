@@ -1,11 +1,20 @@
 import Link from "next/link";
 import styles from "./not-found.module.css";
+import Image from "next/image";
 
 export default function NotFound() {
   return (
     <main className={styles.wrapper}>
       <section className={styles.card}>
+        <Image
+          src="/pet_flow_not_found.png"
+          alt="Logo PetFlow"
+          width={200}
+          height={180}
+          className={styles.logo}
+        />
         <p className={styles.code}>404</p>
+        
         <h1 className={styles.title}>Página não encontrada</h1>
         <p className={styles.description}>
           A rota que você tentou acessar não existe ou foi movida.
