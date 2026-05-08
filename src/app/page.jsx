@@ -7,6 +7,8 @@ import MenuLateral from '../componentes/MenuLateral';
 import BarraSuperior from '../componentes/BarraSuperior';
 import { CalendarDays, DollarSign, PawPrint, ShoppingCart, Users } from 'lucide-react';
 
+const AGENDAMENTOS_ENDPOINT = "/dashboard";
+
 export default function Dashboard() {
   const [dashboard, setDashboard] = useState({
     totalClientes: 0,
@@ -19,7 +21,7 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboard() {
       try {
-        const { data } = await api.get('/dashboard');
+        const { data } = await api.get(AGENDAMENTOS_ENDPOINT);
         setDashboard({
           totalClientes: data.totalClientes ?? 0,
           totalPets: data.totalPets ?? 0,
