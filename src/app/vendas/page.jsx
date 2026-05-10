@@ -21,6 +21,7 @@ function normalizarVenda(venda) {
   return {
     id: venda?.id ?? venda?.ven_id ?? venda?.codigo ?? venda?.cod ?? "",
     cliente: venda?.cliente ?? venda?.ven_cliente ?? venda?.nomeCliente ?? "",
+    qtd_itens: parseInt(venda?.qtd_itens) || 0, // Puxa do backend o total de itens
     produtos: Array.isArray(venda?.produtos)
       ? venda.produtos
       : venda?.produto
@@ -177,32 +178,35 @@ export default function VendasPage() {
     setModalAberto(true);
   }
 
-  function abrirModalEdicao(venda) {
-    setVendaEmEdicao(venda);
-    const prods =
-      venda.produtos?.length > 0
-        ? venda.produtos
-        : [
-            {
-              idTemporario: Date.now(),
-              produto: "",
-              quantidade: "1",
-              subtotal: "",
-            },
-          ];
+  // Transformada em assíncrona para buscar os produtos no backend antes de abrir
+  async function abrirModalEdicao(venda) {
+    try {
+      setErro("");
+      const response = await api.get(`${VENDAS_ENDPOINT}/${venda.id}`);
+      const venda_detalhes = response.data;
 
-    setFormulario({
-      cliente: venda.cliente ?? "",
-      produtos: prods.map((p, i) => ({
-        idTemporario: Date.now() + i,
-        produto: p.produto ?? "",
-        quantidade: p.quantidade ?? "1",
-        subtotal: p.subtotal ? formatarMoeda(p.subtotal) : "",
-      })),
-      totalVenda: venda.totalVenda ?? 0,
-    });
-    setErro("");
-    setModalAberto(true);
+      setVendaEmEdicao(venda_detalhes);
+      
+      const prods = venda_detalhes.produtos?.length > 0
+        ? venda_detalhes.produtos
+        : [{ idTemporario: Date.now(), produto: "", quantidade: "1", subtotal: "" }];
+
+      setFormulario({
+        cliente: venda_detalhes.cliente ?? venda.cliente ?? "",
+        produtos: prods.map((p, i) => ({
+          idTemporario: Date.now() + i,
+          produto: p.produto ?? "",
+          quantidade: String(p.quantidade ?? "1"),
+          subtotal: p.subtotal ? formatarMoeda(p.subtotal) : "R$ 0,00",
+        })),
+        totalVenda: venda_detalhes.totalVenda ?? venda.totalVenda ?? 0,
+      });
+
+      setModalAberto(true);
+    } catch (error) {
+      console.error("Erro ao carregar venda:", error);
+      setErro("Não foi possível carregar os detalhes da venda.");
+    }
   }
 
   function fecharModal() {
@@ -222,24 +226,18 @@ export default function VendasPage() {
   }
 
   function atualizarCampoProduto(idTemporario, campo, valor) {
-    let novoValor = valor;
-
-    if (campo === "subtotal") {
-      const apenasNumeros = valor.replace(/\D/g, "");
-      if (apenasNumeros) {
-        novoValor = new Intl.NumberFormat("pt-BR", {
-          style: "currency",
-          currency: "BRL",
-        }).format(Number(apenasNumeros) / 100);
-      } else {
-        novoValor = "";
-      }
-    }
-
     setFormulario((estadoAnterior) => {
       const novosProdutos = estadoAnterior.produtos.map((p) => {
         if (p.idTemporario === idTemporario) {
-          return { ...p, [campo]: novoValor };
+          const itemAtualizado = { ...p, [campo]: valor };
+          
+          // Lógica do cálculo automático baseada na lista de produtos do state
+          const produtoCatalogo = produtos.find(prod => prod.nome === itemAtualizado.produto);
+          const precoUnitario = produtoCatalogo ? parseFloat(produtoCatalogo.preco) : 0;
+          const qtd = parseInt(itemAtualizado.quantidade) || 0;
+          
+          itemAtualizado.subtotal = formatarMoeda(precoUnitario * qtd);
+          return itemAtualizado;
         }
         return p;
       });
@@ -266,7 +264,7 @@ export default function VendasPage() {
           idTemporario: Date.now(),
           produto: "",
           quantidade: "1",
-          subtotal: "",
+          subtotal: "R$ 0,00",
         },
       ],
     }));
@@ -290,7 +288,7 @@ export default function VendasPage() {
                 idTemporario: Date.now(),
                 produto: "",
                 quantidade: "1",
-                subtotal: "",
+                subtotal: "R$ 0,00",
               },
             ],
         totalVenda: total,
@@ -355,6 +353,7 @@ export default function VendasPage() {
       }
 
       fecharModal();
+      buscarDados(); // Recarrega a tela para garantir que puxa o qtd_itens correto do back
     } catch (error) {
       console.log("Erro ao salvar venda:", error);
       setErro("Nao foi possivel salvar a venda.");
@@ -450,11 +449,7 @@ export default function VendasPage() {
                     >
                       <td>{venda.cliente}</td>
                       <td>{formatarData(venda.data)}</td>
-                      <td>
-                        {Array.isArray(venda.produtos)
-                          ? venda.produtos.length
-                          : 1}
-                      </td>
+                      <td>{venda.qtd_itens || 0}</td>
                       <td>{formatarMoeda(venda.totalVenda)}</td>
                       <td>
                         <div className={styles.acoesLinha}>
@@ -592,14 +587,7 @@ export default function VendasPage() {
                       <input
                         type="text"
                         value={p.subtotal}
-                        onChange={(e) =>
-                          atualizarCampoProduto(
-                            p.idTemporario,
-                            "subtotal",
-                            e.target.value,
-                          )
-                        }
-                        required
+                        readOnly // Definido como readonly para o usuario não apagar o calculo automatico
                         className={styles.inputPersonalizado}
                       />
                     </label>
