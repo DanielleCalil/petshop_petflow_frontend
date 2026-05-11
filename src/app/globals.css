@@ -135,6 +135,12 @@ html {
   height: 100%;
 }
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
 body {
   font-family: "Quicksand", sans-serif;
   font-weight: 300;
@@ -144,13 +150,13 @@ body {
   min-height: 100vh;
   height: 100%;
   overflow-x: hidden;
-  overflow-y: hidden;
+  overflow-y: auto;
 }
 
 .layout {
   width: 100%;
   min-height: 100vh;
-  height: 100%;
+  height: auto;
 }
 
 .containerGlobal {

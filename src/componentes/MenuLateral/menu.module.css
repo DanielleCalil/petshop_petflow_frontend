@@ -43,7 +43,7 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: stretch;
-  overflow-y: auto;
+  overflow-y: hidden;
 }
 
 .menuItem {
@@ -56,7 +56,7 @@
   text-decoration: none;
   font-size: 1.3rem;
   border-radius: 1.4rem;
-  width: 70%;
+  width: 85%;
   margin: 2px auto;
   transition:
     background 0.2s,
@@ -78,7 +78,7 @@
   text-decoration: none;
   font-size: 1.3rem;
   border-radius: 1.4rem;
-  width: 70%;
+  width: 85%;
   margin: 2px auto;
 }
 
@@ -120,4 +120,87 @@
 .logoutButton:hover {
   background: #f5f5f5;
   border-color: #d4d4d8;
+}
+
+@media (max-width: 900px) {
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    height: auto;
+    box-shadow: none;
+    border-right: 0;
+    border-bottom: 1px solid hsl(218, 25%, 90%);
+  }
+
+  .logoArea {
+    justify-content: flex-start;
+    padding: 12px 16px 10px;
+    margin-bottom: 8px;
+  }
+
+  .divisor {
+    margin-bottom: 8px;
+  }
+
+  .menuList {
+    flex-direction: row;
+    overflow-x: auto;
+    overflow-y: hidden;
+    gap: 8px;
+    padding: 0 12px 12px;
+    align-items: center;
+  }
+
+  .menuList li {
+    flex: 0 0 auto;
+  }
+
+  .menuItem,
+  .active {
+    width: auto;
+    margin: 0;
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 1.2rem;
+    white-space: nowrap;
+  }
+
+  .icon {
+    font-size: 1.2rem;
+  }
+
+  .logoutArea {
+    border-top: 0;
+    padding: 0 12px 12px;
+  }
+
+  .logoutButton {
+    margin-left: auto;
+    margin-right: 0;
+    width: auto;
+    padding: 8px 12px;
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 640px) {
+  .logoArea {
+    padding: 10px 12px 8px;
+  }
+
+  .menuList {
+    padding: 0 8px 10px;
+    gap: 6px;
+  }
+
+  .menuItem,
+  .active {
+    padding: 8px 10px;
+    font-size: 1.1rem;
+    gap: 8px;
+  }
+
+  .logoutArea {
+    padding: 0 8px 10px;
+  }
 }

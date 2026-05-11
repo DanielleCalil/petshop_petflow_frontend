@@ -4,12 +4,14 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
+import ConfirmationModal from "../../componentes/Modal/ConfirmationModal";
 import api from "../../services/api";
 import styles from "./page.module.css";
 
 const AGENDAMENTOS_ENDPOINT = "/agendamentos";
 const CLIENTES_ENDPOINT = "/clientes";
 const PETS_ENDPOINT = "/pets";
+const SERVICOS_ENDPOINT = "/servicos";
 
 const estadoInicialFormulario = {
   clienteId: "",
@@ -32,6 +34,13 @@ function normalizarPet(pet) {
     id: pet?.id ?? pet?.pet_id ?? pet?.codigo ?? pet?.cod ?? "",
     nome: pet?.nome ?? pet?.pet_nome ?? pet?.nomePet ?? "",
     clienteId: pet?.clienteId ?? pet?.cliente_id ?? pet?.cli_id ?? pet?.donoId ?? "",
+  };
+}
+
+function normalizarServico(servico) {
+  return {
+    id: servico?.id ?? servico?.ser_id ?? servico?.codigo ?? servico?.cod ?? "",
+    nome: servico?.nome ?? servico?.ser_nome ?? servico?.nomeServico ?? "",
   };
 }
 
@@ -62,12 +71,24 @@ function extrairLista(payload, chaveLista) {
     return payload.data;
   }
 
+  if (Array.isArray(payload?.data?.[chaveLista])) {
+    return payload.data[chaveLista];
+  }
+
   if (Array.isArray(payload?.[chaveLista])) {
     return payload[chaveLista];
   }
 
   if (Array.isArray(payload?.dados?.[chaveLista])) {
     return payload.dados[chaveLista];
+  }
+
+  if (Array.isArray(payload?.dados?.data?.[chaveLista])) {
+    return payload.dados.data[chaveLista];
+  }
+
+  if (Array.isArray(payload?.data?.dados?.[chaveLista])) {
+    return payload.data.dados[chaveLista];
   }
 
   return [];
@@ -95,24 +116,57 @@ function construirEndpointAgendamento(idAgendamento) {
   return `${AGENDAMENTOS_ENDPOINT}/${idAgendamento}`;
 }
 
+function formatarDataParaBR(data) {
+  if (!data) {
+    return "";
+  }
+
+  const partes = String(data).split("T")[0].split("-");
+
+  if (partes.length === 3 && partes[0].length === 4) {
+    const [ano, mes, dia] = partes;
+    return `${dia}/${mes}/${ano}`;
+  }
+
+  return data;
+}
+
 export default function AgendamentosPage() {
   const [agendamentos, setAgendamentos] = useState([]);
   const [clientes, setClientes] = useState([]);
   const [pets, setPets] = useState([]);
+  const [servicos, setServicos] = useState([]);
   const [modalAberto, setModalAberto] = useState(false);
   const [agendamentoEmEdicao, setAgendamentoEmEdicao] = useState(null);
   const [formulario, setFormulario] = useState(estadoInicialFormulario);
   const [carregando, setCarregando] = useState(true);
   const [carregandoClientes, setCarregandoClientes] = useState(true);
   const [carregandoPets, setCarregandoPets] = useState(true);
+  const [carregandoServicos, setCarregandoServicos] = useState(true);
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState(null);
   const [erro, setErro] = useState("");
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
+  const [agendamentoParaExcluir, setAgendamentoParaExcluir] = useState(null);
+
+  function obterClasseStatus(status) {
+    switch (status) {
+      case "Concluído":
+        return styles.statusConcluido;
+      case "Agendado":
+        return styles.statusAgendado;
+      case "Cancelado":
+        return styles.statusCancelado;
+      default:
+        return "";
+    }
+  }
 
   useEffect(() => {
     buscarAgendamentos();
     buscarClientes();
     buscarPets();
+    buscarServicos();
   }, []);
 
   async function buscarAgendamentos() {
@@ -154,6 +208,19 @@ export default function AgendamentosPage() {
       console.log("Erro ao buscar pets:", error);
     } finally {
       setCarregandoPets(false);
+    }
+  }
+
+  async function buscarServicos() {
+    try {
+      setCarregandoServicos(true);
+      const response = await api.get(SERVICOS_ENDPOINT);
+      const lista = extrairLista(response.data, "servicos").map(normalizarServico);
+      setServicos(lista);
+    } catch (error) {
+      console.log("Erro ao buscar serviços:", error);
+    } finally {
+      setCarregandoServicos(false);
     }
   }
 
@@ -263,6 +330,8 @@ export default function AgendamentosPage() {
         setAgendamentos((estadoAnterior) => [...estadoAnterior, agendamentoCriado]);
       }
 
+      await buscarAgendamentos();
+
       fecharModal();
     } catch (error) {
       console.log("Erro ao salvar agendamento:", error);
@@ -278,28 +347,40 @@ export default function AgendamentosPage() {
       return;
     }
 
-    const confirmarExclusao = window.confirm(
-      `Deseja realmente excluir o agendamento ${agendamento.cliente}?`,
-    );
+    setAgendamentoParaExcluir(agendamento);
+    setModalConfirmacaoAberto(true);
+  }
 
-    if (!confirmarExclusao) {
+  async function confirmarExclusao() {
+    if (!agendamentoParaExcluir?.id) {
+      setErro("Nao foi possivel identificar o agendamento para exclusao.");
       return;
     }
 
     try {
-      setExcluindoId(agendamento.id);
+      setExcluindoId(agendamentoParaExcluir.id);
       setErro("");
 
-      await api.delete(construirEndpointAgendamento(agendamento.id));
+      await api.delete(construirEndpointAgendamento(agendamentoParaExcluir.id));
       setAgendamentos((estadoAnterior) =>
-        estadoAnterior.filter((agendamentoAtual) => agendamentoAtual.id !== agendamento.id),
+        estadoAnterior.filter(
+          (agendamentoAtual) => agendamentoAtual.id !== agendamentoParaExcluir.id,
+        ),
       );
+
+      setModalConfirmacaoAberto(false);
+      setAgendamentoParaExcluir(null);
     } catch (error) {
       console.log("Erro ao excluir agendamento:", error);
       setErro("Nao foi possivel excluir o agendamento.");
     } finally {
       setExcluindoId(null);
     }
+  }
+
+  function cancelarExclusao() {
+    setModalConfirmacaoAberto(false);
+    setAgendamentoParaExcluir(null);
   }
 
   return (
@@ -360,9 +441,13 @@ export default function AgendamentosPage() {
                       <td>{agendamento.cliente}</td>
                       <td>{agendamento.pet}</td>
                       <td>{agendamento.servico}</td>
-                      <td>{agendamento.data}</td>
+                      <td>{formatarDataParaBR(agendamento.data)}</td>
                       <td>{agendamento.hora}</td>
-                      <td>{agendamento.status}</td>
+                      <td>
+                        <span className={`${styles.statusBadge} ${obterClasseStatus(agendamento.status)}`}>
+                          {agendamento.status}
+                        </span>
+                      </td>
                       <td>
                         <div className={styles.acoesLinha}>
                           <button
@@ -469,14 +554,23 @@ export default function AgendamentosPage() {
 
               <label htmlFor="servico" className={styles.campo}>
                 Serviço
-                <input
+                <select
                   id="servico"
                   name="servico"
-                  type="text"
                   value={formulario.servico}
                   onChange={atualizarCampo}
                   required
-                />
+                  disabled={carregandoServicos}
+                >
+                  <option value="">
+                    {carregandoServicos ? "Carregando serviços..." : "Selecione o serviço"}
+                  </option>
+                  {servicos.map((servico) => (
+                    <option key={servico.id || servico.nome} value={servico.nome}>
+                      {servico.nome}
+                    </option>
+                  ))}
+                </select>
               </label>
 
               <label htmlFor="data" className={styles.campo}>
@@ -533,6 +627,17 @@ export default function AgendamentosPage() {
           </section>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfirmacaoAberto}
+        titulo="Confirmar Exclusão"
+        mensagem={`Deseja realmente excluir o agendamento ${agendamentoParaExcluir?.cliente}?`}
+        textoBotaoOk="Excluir"
+        textoBotaoCancelar="Cancelar"
+        onConfirmar={confirmarExclusao}
+        onCancelar={cancelarExclusao}
+        carregando={excluindoId !== null}
+      />
     </div>
   );
 }

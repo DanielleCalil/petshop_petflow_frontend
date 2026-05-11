@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
+import ConfirmationModal from "../../componentes/Modal/ConfirmationModal";
 import api from "../../services/api";
 import styles from "./page.module.css";
 
@@ -130,6 +131,8 @@ export default function VendasPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState(null);
   const [erro, setErro] = useState("");
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
+  const [vendaParaExcluir, setVendaParaExcluir] = useState(null);
 
   useEffect(() => {
     buscarDados();
@@ -356,6 +359,8 @@ export default function VendasPage() {
         setVendas((estadoAnterior) => [...estadoAnterior, vendaCriada]);
       }
 
+      await buscarDados();
+
       fecharModal();
       buscarDados(); // Recarrega a tela para garantir que puxa o qtd_itens correto do back
     } catch (error) {
@@ -372,28 +377,40 @@ export default function VendasPage() {
       return;
     }
 
-    const confirmarExclusao = window.confirm(
-      `Deseja realmente excluir a venda do cliente ${venda.cliente}?`,
-    );
+    setVendaParaExcluir(venda);
+    setModalConfirmacaoAberto(true);
+  }
 
-    if (!confirmarExclusao) {
+  async function confirmarExclusao() {
+    if (!vendaParaExcluir?.id) {
+      setErro("Nao foi possivel identificar a venda para exclusao.");
       return;
     }
 
     try {
-      setExcluindoId(venda.id);
+      setExcluindoId(vendaParaExcluir.id);
       setErro("");
 
-      await api.delete(construirEndpointVenda(venda.id));
+      await api.delete(construirEndpointVenda(vendaParaExcluir.id));
       setVendas((estadoAnterior) =>
-        estadoAnterior.filter((vendaAtual) => vendaAtual.id !== venda.id),
+        estadoAnterior.filter(
+          (vendaAtual) => vendaAtual.id !== vendaParaExcluir.id,
+        ),
       );
+
+      setModalConfirmacaoAberto(false);
+      setVendaParaExcluir(null);
     } catch (error) {
       console.log("Erro ao excluir venda:", error);
       setErro("Nao foi possivel excluir a venda.");
     } finally {
       setExcluindoId(null);
     }
+  }
+
+  function cancelarExclusao() {
+    setModalConfirmacaoAberto(false);
+    setVendaParaExcluir(null);
   }
 
   return (
@@ -639,6 +656,17 @@ export default function VendasPage() {
           </section>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfirmacaoAberto}
+        titulo="Confirmar Exclusão"
+        mensagem={`Deseja realmente excluir a venda do cliente ${vendaParaExcluir?.cliente}?`}
+        textoBotaoOk="Excluir"
+        textoBotaoCancelar="Cancelar"
+        onConfirmar={confirmarExclusao}
+        onCancelar={cancelarExclusao}
+        carregando={excluindoId !== null}
+      />
     </div>
   );
 }

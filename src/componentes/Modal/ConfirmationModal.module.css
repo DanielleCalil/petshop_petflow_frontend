@@ -1,0 +1,103 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(2px);
+}
+
+.modal {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+  width: 90%;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.container {
+  padding: 32px;
+}
+
+.titulo {
+  font-size: 1.7rem;
+  font-weight: 700;
+  color: #333;
+  margin: 0 0 16px 0;
+}
+
+.mensagem {
+  font-size: 1.5rem;
+  color: #666;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+  font-weight: 500;
+}
+
+.botoes {
+  display: flex;
+  gap: 16px;
+  justify-content: flex-end;
+}
+
+.botaoCancelar {
+  border: 2px solid #d0d0d0;
+  background: #f0f0f0;
+  color: #333;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  text-align: center;
+}
+
+.botaoCancelar:hover:not(:disabled) {
+  border-color: #c0c0c0;
+  background: #e8e8e8;
+}
+
+.botaoCancelar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.botaoOk {
+  border: 0;
+  background: #2c83ed;
+  color: #ffffff;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-size: 1.5rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+  text-align: center;
+}
+
+.botaoOk:hover:not(:disabled) {
+  filter: brightness(0.95);
+  box-shadow: 0 4px 12px rgba(44, 131, 237, 0.4);
+}
+
+.botaoOk:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}

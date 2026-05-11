@@ -63,13 +63,15 @@
 .tabelaContainer {
   width: 100%;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid #d7dde7;
   background: #fefefe;
 }
 
 .tabela {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -81,13 +83,56 @@
 .tabela th,
 .tabela td {
   text-align: left;
-  padding: 22px 20px;
+  padding: 16px 10px;
   font-size: 1.5rem;
   color: #334154;
+  vertical-align: middle;
+  word-break: break-word;
 }
 
 .tabela th {
   font-weight: 600;
+}
+
+.tabela th:nth-child(1),
+.tabela td:nth-child(1) {
+  width: 14%;
+}
+
+.tabela th:nth-child(2),
+.tabela td:nth-child(2) {
+  width: 14%;
+}
+
+.tabela th:nth-child(3),
+.tabela td:nth-child(3) {
+  width: 14%;
+}
+
+.tabela th:nth-child(4),
+.tabela td:nth-child(4) {
+  width: 11%;
+}
+
+.tabela th:nth-child(5),
+.tabela td:nth-child(5) {
+  width: 9%;
+}
+
+.tabela th:nth-child(6),
+.tabela td:nth-child(6) {
+  width: 17%;
+}
+
+.tabela th:nth-child(7),
+.tabela td:nth-child(7) {
+  width: 21%;
+}
+
+.tabela td:not(:last-child) {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .tabela tbody tr {
@@ -107,20 +152,24 @@
 .acoesTabela {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .botaoAcaoEditar,
 .botaoAcaoExcluir {
   border: 0;
   border-radius: 10px;
-  height: 34px;
-  padding: 0 12px;
+  height: 32px;
+  padding: 0 10px;
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 1.2rem;
+  font-size: 1.1rem;
   font-weight: 700;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition:
     filter 0.2s ease,
@@ -344,14 +393,96 @@
   }
 
   .tabela {
-    min-width: 680px;
+    min-width: 100%;
   }
 
   .acoesTabela {
-    min-width: 210px;
+    min-width: 0;
   }
 
   .modal {
     padding: 16px;
+  }
+}
+
+@media (max-width: 1200px) {
+  .titulo {
+    font-size: 2.4rem;
+  }
+
+  .botaoNovo {
+    font-size: 1.4rem;
+    padding: 10px 14px;
+  }
+
+  .mensagemErro,
+  .mensagemErroModal {
+    font-size: 1.4rem;
+  }
+
+  .tabela th,
+  .tabela td {
+    font-size: 1.4rem;
+    padding: 14px 12px;
+  }
+
+  .botaoAcaoEditar,
+  .botaoAcaoExcluir {
+    font-size: 1.2rem;
+    height: 34px;
+    padding: 0 10px;
+  }
+
+  .modalHeader h2 {
+    font-size: 2.2rem;
+  }
+
+  .campo {
+    font-size: 1.4rem;
+  }
+
+  .campo input,
+  .campo select {
+    font-size: 1.5rem;
+    height: 44px;
+  }
+
+  .botaoSalvar {
+    font-size: 1.4rem;
+    height: 44px;
+  }
+}
+
+@media (max-width: 900px) {
+  .topoPagina {
+    align-items: stretch;
+  }
+
+  .titulo {
+    margin-bottom: 0;
+  }
+
+  .botaoNovo {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 14px 10px 20px;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    padding: 14px;
+  }
+
+  .modalHeader h2 {
+    font-size: 1.8rem;
+  }
+
+  .tabela {
+    min-width: 100%;
   }
 }

@@ -63,13 +63,15 @@
 .tabelaContainer {
   width: 100%;
   border-radius: 16px;
-  overflow: hidden;
+  overflow-x: auto;
+  overflow-y: hidden;
   border: 1px solid #d7dde7;
   background: #fefefe;
 }
 
 .tabela {
   width: 100%;
+  min-width: 100%;
   border-collapse: collapse;
   table-layout: fixed;
 }
@@ -84,6 +86,8 @@
   padding: 22px 20px;
   font-size: 1.5rem;
   color: #334154;
+  vertical-align: middle;
+  word-break: break-word;
 }
 
 .tabela th {
@@ -108,6 +112,8 @@
   display: flex;
   align-items: center;
   gap: 10px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .botaoAcao {
@@ -119,6 +125,8 @@
   gap: 6px;
   font-size: 1.3rem;
   font-weight: 600;
+  white-space: nowrap;
+  flex-shrink: 0;
   cursor: pointer;
   transition: filter 0.2s ease;
 }
@@ -467,11 +475,11 @@
   }
 
   .tabela {
-    min-width: 680px;
+    min-width: 100%;
   }
 
   .acoesLinha {
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
   }
 
   .modal {
@@ -485,5 +493,91 @@
   
   .linhaProduto:first-child .botaoRemoverLinha {
     margin-top: 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .titulo {
+    font-size: 2.4rem;
+  }
+
+  .botaoNovo {
+    font-size: 1.4rem;
+    padding: 10px 14px;
+  }
+
+  .tabela th,
+  .tabela td {
+    font-size: 1.4rem;
+    padding: 14px 12px;
+  }
+
+  .modalHeader h2 {
+    font-size: 2.2rem;
+  }
+
+  .campo {
+    font-size: 1.4rem;
+  }
+
+  .campo input,
+  .campo select {
+    font-size: 1.5rem;
+    height: 44px;
+  }
+
+  .botaoSalvar,
+  .inputPersonalizado {
+    font-size: 1.4rem;
+    height: 44px;
+  }
+
+  .mensagemErro,
+  .mensagemErroModal {
+    font-size: 1.4rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .topoPagina {
+    align-items: stretch;
+  }
+
+  .titulo {
+    margin-bottom: 0;
+  }
+
+  .botaoNovo {
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 14px 10px 20px;
+  }
+
+  .modal {
+    width: 100%;
+    max-height: calc(100vh - 20px);
+    padding: 14px;
+  }
+
+  .modalHeader h2 {
+    font-size: 1.8rem;
+  }
+
+  .tabela {
+    min-width: 100%;
+  }
+
+  .bannerTotal {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .textoTotalValor {
+    font-size: 1.8rem;
   }
 }

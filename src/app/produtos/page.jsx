@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
+import ConfirmationModal from "../../componentes/Modal/ConfirmationModal";
 import api from "../../services/api";
 import styles from "./page.module.css";
 
@@ -100,6 +101,8 @@ export default function ProdutosPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState(null);
   const [erro, setErro] = useState("");
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
+  const [produtoParaExcluir, setProdutoParaExcluir] = useState(null);
 
   useEffect(() => {
     buscarProdutos();
@@ -219,6 +222,8 @@ export default function ProdutosPage() {
         setProdutos((estadoAnterior) => [...estadoAnterior, produtoCriado]);
       }
 
+      await buscarProdutos();
+
       fecharModal();
     } catch (error) {
       console.log("Erro ao salvar produto:", error);
@@ -234,28 +239,40 @@ export default function ProdutosPage() {
       return;
     }
 
-    const confirmarExclusao = window.confirm(
-      `Deseja realmente excluir o produto ${produto.nome}?`,
-    );
+    setProdutoParaExcluir(produto);
+    setModalConfirmacaoAberto(true);
+  }
 
-    if (!confirmarExclusao) {
+  async function confirmarExclusao() {
+    if (!produtoParaExcluir?.id) {
+      setErro("Nao foi possivel identificar o produto para exclusao.");
       return;
     }
 
     try {
-      setExcluindoId(produto.id);
+      setExcluindoId(produtoParaExcluir.id);
       setErro("");
 
-      await api.delete(construirEndpointProduto(produto.id));
+      await api.delete(construirEndpointProduto(produtoParaExcluir.id));
       setProdutos((estadoAnterior) =>
-        estadoAnterior.filter((produtoAtual) => produtoAtual.id !== produto.id),
+        estadoAnterior.filter(
+          (produtoAtual) => produtoAtual.id !== produtoParaExcluir.id,
+        ),
       );
+
+      setModalConfirmacaoAberto(false);
+      setProdutoParaExcluir(null);
     } catch (error) {
       console.log("Erro ao excluir produto:", error);
       setErro("Nao foi possivel excluir o produto.");
     } finally {
       setExcluindoId(null);
     }
+  }
+
+  function cancelarExclusao() {
+    setModalConfirmacaoAberto(false);
+    setProdutoParaExcluir(null);
   }
 
   return (
@@ -439,6 +456,17 @@ export default function ProdutosPage() {
           </section>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfirmacaoAberto}
+        titulo="Confirmar Exclusão"
+        mensagem={`Deseja realmente excluir o produto ${produtoParaExcluir?.nome}?`}
+        textoBotaoOk="Excluir"
+        textoBotaoCancelar="Cancelar"
+        onConfirmar={confirmarExclusao}
+        onCancelar={cancelarExclusao}
+        carregando={excluindoId !== null}
+      />
     </div>
   );
 }

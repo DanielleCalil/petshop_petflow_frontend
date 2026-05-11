@@ -4,15 +4,23 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
+import ConfirmationModal from "../../componentes/Modal/ConfirmationModal";
 import api from "../../services/api";
 import styles from "./page.module.css";
 
 const PETS_ENDPOINT = "/pets";
 const CLIENTES_ENDPOINT = "/clientes";
+const PRODUTOS_ENDPOINT = "/produtos";
+const AGENDAMENTOS_ENDPOINT = "/agendamentos";
+const VENDAS_ENDPOINT = "/vendas";
+const SERVICOS_ENDPOINT = "/servicos";
 
 const estadoInicialFormulario = {
   nome: "",
   tipo: "",
+  raca: "",
+  peso: "",
+  idade: "",
   clienteId: "",
 };
 
@@ -52,6 +60,9 @@ function normalizarPet(pet) {
     id: pet?.id ?? pet?.pet_id ?? pet?.codigo ?? pet?.cod ?? "",
     nome: pet?.nome ?? pet?.pet_nome ?? pet?.nomePet ?? "",
     tipo: pet?.tipo ?? pet?.pet_tipo ?? pet?.especie ?? "",
+    raca: pet?.raca ?? pet?.pet_raca ?? "",
+    peso: pet?.peso ?? pet?.pet_peso ?? "",
+    idade: pet?.idade ?? pet?.pet_idade ?? "",
     clienteId:
       pet?.clienteId ?? pet?.cliente_id ?? pet?.cli_id ?? pet?.donoId ?? "",
     dono:
@@ -77,9 +88,101 @@ function extrairItemCriado(payload, fallback, normalizador) {
   };
 }
 
+function normalizarTexto(valor) {
+  return String(valor ?? "").trim().toLowerCase();
+}
+
+function compararIds(idA, idB) {
+  if (idA === undefined || idA === null || idB === undefined || idB === null) {
+    return false;
+  }
+
+  return String(idA).trim() === String(idB).trim();
+}
+
+function obterChavePet(pet) {
+  if (pet?.id !== undefined && pet?.id !== null && pet?.id !== "") {
+    return `id:${String(pet.id).trim()}`;
+  }
+
+  return `nome:${normalizarTexto(pet?.nome)}`;
+}
+
+function existeVinculoPetPorId(item, idPet) {
+  const idsRelacionados = [
+    item?.petId,
+    item?.pet_id,
+    item?.idPet,
+    item?.pet?.id,
+    item?.pet?.pet_id,
+    item?.produto?.petId,
+    item?.produto?.pet_id,
+    item?.servico?.petId,
+    item?.servico?.pet_id,
+  ];
+
+  return idsRelacionados.some((idRelacionado) => compararIds(idRelacionado, idPet));
+}
+
+function existeVinculoPetPorNome(item, nomePet) {
+  const nomeNormalizado = normalizarTexto(nomePet);
+
+  if (!nomeNormalizado) {
+    return false;
+  }
+
+  const nomesRelacionados = [
+    item?.pet,
+    item?.petNome,
+    item?.nomePet,
+    item?.cli_pet,
+    item?.produto?.pet,
+    item?.servico?.pet,
+    item?.pet?.nome,
+  ];
+
+  return nomesRelacionados.some(
+    (nomeRelacionado) => normalizarTexto(nomeRelacionado) === nomeNormalizado,
+  );
+}
+
+function existeVinculoPetComCliente(item, pet) {
+  const idClientePet = pet?.clienteId;
+  const nomeDonoPet = pet?.dono;
+  const idsRelacionados = [
+    item?.id,
+    item?.cli_id,
+    item?.clienteId,
+    item?.cliente_id,
+    item?.idCliente,
+  ];
+  const nomesRelacionados = [item?.nome, item?.cli_nome, item?.nomeCliente];
+
+  const vinculoPorIdCliente = idsRelacionados.some((idRelacionado) =>
+    compararIds(idRelacionado, idClientePet),
+  );
+
+  if (vinculoPorIdCliente) {
+    return true;
+  }
+
+  return nomesRelacionados.some(
+    (nomeRelacionado) => normalizarTexto(nomeRelacionado) === normalizarTexto(nomeDonoPet),
+  );
+}
+
+function itemPossuiVinculoComPet(item, pet, tipoLista) {
+  if (tipoLista === "clientes") {
+    return existeVinculoPetComCliente(item, pet);
+  }
+
+  return existeVinculoPetPorId(item, pet?.id) || existeVinculoPetPorNome(item, pet?.nome);
+}
+
 export default function PetsPage() {
   const [pets, setPets] = useState([]);
   const [clientes, setClientes] = useState([]);
+  const [petsComVinculo, setPetsComVinculo] = useState({});
   const [modalAberto, setModalAberto] = useState(false);
   const [petEmEdicao, setPetEmEdicao] = useState(null);
   const [formulario, setFormulario] = useState(estadoInicialFormulario);
@@ -89,11 +192,59 @@ export default function PetsPage() {
   const [processandoAcaoId, setProcessandoAcaoId] = useState(null);
   const [erroPets, setErroPets] = useState("");
   const [erroModal, setErroModal] = useState("");
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
+  const [petParaExcluir, setPetParaExcluir] = useState(null);
 
   useEffect(() => {
     buscarPets();
     buscarClientes();
   }, []);
+
+  function petEstaVinculado(pet) {
+    return Boolean(petsComVinculo[obterChavePet(pet)]);
+  }
+
+  async function buscarPetsComVinculo(listaPets) {
+    const endpointsRelacionados = [
+      { endpoint: CLIENTES_ENDPOINT, chaveLista: "clientes", tipoLista: "clientes" },
+      { endpoint: PRODUTOS_ENDPOINT, chaveLista: "produtos", tipoLista: "produtos" },
+      {
+        endpoint: AGENDAMENTOS_ENDPOINT,
+        chaveLista: "agendamentos",
+        tipoLista: "agendamentos",
+      },
+      { endpoint: VENDAS_ENDPOINT, chaveLista: "vendas", tipoLista: "vendas" },
+      { endpoint: SERVICOS_ENDPOINT, chaveLista: "servicos", tipoLista: "servicos" },
+    ];
+
+    const respostas = await Promise.allSettled(
+      endpointsRelacionados.map(({ endpoint }) => api.get(endpoint)),
+    );
+
+    const listasRelacionadas = respostas.map((resultado, indice) => {
+      if (resultado.status !== "fulfilled") {
+        return { tipoLista: endpointsRelacionados[indice].tipoLista, itens: [] };
+      }
+
+      const { chaveLista, tipoLista } = endpointsRelacionados[indice];
+      return {
+        tipoLista,
+        itens: extrairLista(resultado.value?.data, chaveLista),
+      };
+    });
+
+    const mapaVinculos = {};
+
+    listaPets.forEach((pet) => {
+      const possuiVinculo = listasRelacionadas.some(({ tipoLista, itens }) =>
+        itens.some((item) => itemPossuiVinculoComPet(item, pet, tipoLista)),
+      );
+
+      mapaVinculos[obterChavePet(pet)] = possuiVinculo;
+    });
+
+    setPetsComVinculo(mapaVinculos);
+  }
 
   async function buscarPets() {
     try {
@@ -104,6 +255,7 @@ export default function PetsPage() {
       const lista = extrairLista(response.data, "pets").map(normalizarPet);
 
       setPets(lista);
+      await buscarPetsComVinculo(lista);
     } catch (error) {
       console.log("Erro ao buscar pets:", error);
     } finally {
@@ -138,6 +290,9 @@ export default function PetsPage() {
     setFormulario({
       nome: pet.nome ?? "",
       tipo: pet.tipo ?? "",
+      raca: pet.raca ?? "",
+      peso: pet.peso ? String(pet.peso) : "",
+      idade: pet.idade ? String(pet.idade) : "",
       clienteId: pet.clienteId ? String(pet.clienteId) : "",
     });
     setErroModal("");
@@ -155,7 +310,7 @@ export default function PetsPage() {
     const { name, value } = evento.target;
 
     setFormulario((estadoAnterior) => ({
-      ...estadoAnterior,
+      ...(estadoAnterior ?? estadoInicialFormulario),
       [name]: value,
     }));
   }
@@ -170,6 +325,9 @@ export default function PetsPage() {
     const novoPet = {
       nome: formulario.nome.trim(),
       tipo: formulario.tipo.trim(),
+      raca: formulario.raca.trim(),
+      peso: formulario.peso,
+      idade: formulario.idade,
       clienteId: formulario.clienteId,
     };
 
@@ -214,6 +372,8 @@ export default function PetsPage() {
         setPets((estadoAnterior) => [...estadoAnterior, petCriado]);
       }
 
+      await buscarPets();
+
       fecharModal();
     } catch (error) {
       console.log("Erro ao salvar pet:", error);
@@ -235,22 +395,34 @@ export default function PetsPage() {
       return;
     }
 
-    const confirmou = window.confirm(
-      `Deseja realmente excluir o pet ${pet.nome || "selecionado"}?`,
-    );
+    if (petEstaVinculado(pet)) {
+      setErroPets(
+        "Pet vinculado a cliente/produto/agendamento/venda/servico nao pode ser excluido.",
+      );
+      return;
+    }
 
-    if (!confirmou) {
+    setPetParaExcluir(pet);
+    setModalConfirmacaoAberto(true);
+  }
+
+  async function confirmarExclusao() {
+    if (!petParaExcluir?.id) {
+      setErroPets("Nao foi possivel excluir: pet sem identificador.");
       return;
     }
 
     try {
-      setProcessandoAcaoId(String(pet.id));
+      setProcessandoAcaoId(String(petParaExcluir.id));
       setErroPets("");
 
-      await api.delete(`${PETS_ENDPOINT}/${pet.id}`);
+      await api.delete(`${PETS_ENDPOINT}/${petParaExcluir.id}`);
       setPets((estadoAnterior) =>
-        estadoAnterior.filter((item) => String(item.id) !== String(pet.id)),
+        estadoAnterior.filter((item) => String(item.id) !== String(petParaExcluir.id)),
       );
+
+      setModalConfirmacaoAberto(false);
+      setPetParaExcluir(null);
     } catch (error) {
       console.log("Erro ao excluir pet:", error);
       const mensagemErro =
@@ -260,6 +432,11 @@ export default function PetsPage() {
     } finally {
       setProcessandoAcaoId(null);
     }
+  }
+
+  function cancelarExclusao() {
+    setModalConfirmacaoAberto(false);
+    setPetParaExcluir(null);
   }
 
   return (
@@ -287,6 +464,9 @@ export default function PetsPage() {
                 <tr>
                   <th>Nome</th>
                   <th>Tipo</th>
+                  <th>Raca</th>
+                  <th>Peso (kg)</th>
+                  <th>Idade</th>
                   <th>Dono</th>
                   <th>Ações</th>
                 </tr>
@@ -295,13 +475,13 @@ export default function PetsPage() {
               <tbody>
                 {carregandoPets ? (
                   <tr>
-                    <td colSpan="4" className={styles.estadoTabela}>
+                    <td colSpan="7" className={styles.estadoTabela}>
                       Carregando pets...
                     </td>
                   </tr>
                 ) : pets.length === 0 ? (
                   <tr>
-                    <td colSpan="4" className={styles.estadoTabela}>
+                    <td colSpan="7" className={styles.estadoTabela}>
                       Nenhum pet encontrado.
                     </td>
                   </tr>
@@ -310,6 +490,9 @@ export default function PetsPage() {
                     <tr key={pet.id ?? `${pet.nome}-${pet.clienteId}`}>
                       <td>{pet.nome}</td>
                       <td>{pet.tipo}</td>
+                      <td>{pet.raca}</td>
+                      <td>{pet.peso}</td>
+                      <td>{pet.idade}</td>
                       <td>{pet.dono}</td>
                       <td>
                         <div className={styles.acoesTabela}>
@@ -328,12 +511,22 @@ export default function PetsPage() {
                             type="button"
                             className={styles.botaoAcaoExcluir}
                             onClick={() => excluirPet(pet)}
-                            disabled={processandoAcaoId === String(pet.id)}
+                            disabled={
+                              processandoAcaoId === String(pet.id) ||
+                              petEstaVinculado(pet)
+                            }
                             aria-label={`Excluir pet ${pet.nome}`}
+                            title={
+                              petEstaVinculado(pet)
+                                ? "Pet possui vinculo e nao pode ser excluido"
+                                : ""
+                            }
                           >
                             <Trash2 size={16} />
                             <span>
-                              {processandoAcaoId === String(pet.id)
+                              {petEstaVinculado(pet)
+                                ? "Vinculado"
+                                : processandoAcaoId === String(pet.id)
                                 ? "Excluindo..."
                                 : "Excluir"}
                             </span>
@@ -378,7 +571,7 @@ export default function PetsPage() {
                   id="nome"
                   name="nome"
                   type="text"
-                  value={formulario.nome}
+                  value={formulario?.nome ?? ""}
                   onChange={atualizarCampo}
                   required
                   autoFocus
@@ -392,7 +585,50 @@ export default function PetsPage() {
                   name="tipo"
                   type="text"
                   placeholder="Cachorro, Gato..."
-                  value={formulario.tipo}
+                  value={formulario?.tipo ?? ""}
+                  onChange={atualizarCampo}
+                  required
+                />
+              </label>
+
+              <label htmlFor="raca" className={styles.campo}>
+                Raça
+                <input
+                  id="raca"
+                  name="raca"
+                  type="text"
+                  placeholder="Labrador, Siamês..."
+                  value={formulario?.raca ?? ""}
+                  onChange={atualizarCampo}
+                  required
+                />
+              </label>
+
+              <label htmlFor="peso" className={styles.campo}>
+                Peso (kg)
+                <input
+                  id="peso"
+                  name="peso"
+                  type="number"
+                  min="0"
+                  step="0.1"
+                  placeholder="Ex.: 12.5"
+                  value={formulario?.peso ?? ""}
+                  onChange={atualizarCampo}
+                  required
+                />
+              </label>
+
+              <label htmlFor="idade" className={styles.campo}>
+                Idade
+                <input
+                  id="idade"
+                  name="idade"
+                  type="number"
+                  min="0"
+                  step="1"
+                  placeholder="Ex.: 3"
+                  value={formulario?.idade ?? ""}
                   onChange={atualizarCampo}
                   required
                 />
@@ -403,7 +639,7 @@ export default function PetsPage() {
                 <select
                   id="clienteId"
                   name="clienteId"
-                  value={formulario.clienteId}
+                  value={formulario?.clienteId ?? ""}
                   onChange={atualizarCampo}
                   required
                   disabled={carregandoClientes}
@@ -432,6 +668,17 @@ export default function PetsPage() {
           </section>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfirmacaoAberto}
+        titulo="Confirmar Exclusão"
+        mensagem={`Deseja realmente excluir o pet ${petParaExcluir?.nome || "selecionado"}?`}
+        textoBotaoOk="Excluir"
+        textoBotaoCancelar="Cancelar"
+        onConfirmar={confirmarExclusao}
+        onCancelar={cancelarExclusao}
+        carregando={processandoAcaoId !== null}
+      />
     </div>
   );
 }

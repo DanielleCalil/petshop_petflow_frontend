@@ -12,6 +12,7 @@ export default function RootLayout({ children }) {
   return (
     <html lang="pt-br">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
         <title>Gerenciamento Petshop - PetFlow</title>
         <link rel="icon" href="/app/favicon.ico" />
       </head>

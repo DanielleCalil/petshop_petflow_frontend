@@ -71,11 +71,11 @@ export default function Dashboard() {
   ];
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: '#f5f7fa' }}>
+    <div className={styles.pageLayout}>
       <MenuLateral active="Dashboard" />
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+      <div className={styles.contentArea}>
         <BarraSuperior />
-        <main style={{ flex: 1 }}>
+        <main className={styles.main}>
           <div className={styles.container}>
             <h1 className={styles.title}>Dashboard</h1>
             <div className={styles.cardsGrid}>

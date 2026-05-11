@@ -48,7 +48,7 @@
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.14);
   overflow: hidden;
   height: auto;
-  width: 85%;
+  width: min(92%, 920px);
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -176,6 +176,7 @@
 @media (max-width: 900px) {
   .card {
     flex-direction: column;
+    border-radius: 2.4rem;
   }
 
   .leftPanel,
@@ -200,5 +201,34 @@
 
   .eyeIcon {
     right: 32px;
+  }
+}
+
+@media (max-width: 640px) {
+  .container {
+    width: 100%;
+    padding: 0 10px;
+  }
+
+  .card {
+    width: 100%;
+    border-radius: 2rem;
+  }
+
+  .leftPanel {
+    padding: 2.4rem 1.4rem 1.6rem;
+  }
+
+  .conteudo {
+    padding: 1.8rem 1.2rem 2.2rem;
+  }
+
+  .inputField,
+  .passwordContainer {
+    max-width: 100%;
+  }
+
+  .eyeIcon {
+    right: 18px;
   }
 }

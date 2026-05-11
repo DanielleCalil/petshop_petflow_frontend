@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Pencil, Plus, Trash2, X } from "lucide-react";
 import MenuLateral from "../../componentes/MenuLateral";
 import BarraSuperior from "../../componentes/BarraSuperior";
+import ConfirmationModal from "../../componentes/Modal/ConfirmationModal";
 import api from "../../services/api";
 import styles from "./page.module.css";
 
@@ -98,6 +99,8 @@ export default function ServicosPage() {
   const [salvando, setSalvando] = useState(false);
   const [excluindoId, setExcluindoId] = useState(null);
   const [erro, setErro] = useState("");
+  const [modalConfirmacaoAberto, setModalConfirmacaoAberto] = useState(false);
+  const [servicoParaExcluir, setServicoParaExcluir] = useState(null);
 
   useEffect(() => {
     buscarServicos();
@@ -215,6 +218,8 @@ export default function ServicosPage() {
         setServicos((estadoAnterior) => [...estadoAnterior, servicoCriado]);
       }
 
+      await buscarServicos();
+
       fecharModal();
     } catch (error) {
       console.log("Erro ao salvar serviço:", error);
@@ -230,28 +235,40 @@ export default function ServicosPage() {
       return;
     }
 
-    const confirmarExclusao = window.confirm(
-      `Deseja realmente excluir o serviço ${servico.nome}?`,
-    );
+    setServicoParaExcluir(servico);
+    setModalConfirmacaoAberto(true);
+  }
 
-    if (!confirmarExclusao) {
+  async function confirmarExclusao() {
+    if (!servicoParaExcluir?.id) {
+      setErro("Não foi possivel identificar o serviço para exclusão.");
       return;
     }
 
     try {
-      setExcluindoId(servico.id);
+      setExcluindoId(servicoParaExcluir.id);
       setErro("");
 
-      await api.delete(construirEndpointServico(servico.id));
+      await api.delete(construirEndpointServico(servicoParaExcluir.id));
       setServicos((estadoAnterior) =>
-        estadoAnterior.filter((servicoAtual) => servicoAtual.id !== servico.id),
+        estadoAnterior.filter(
+          (servicoAtual) => servicoAtual.id !== servicoParaExcluir.id,
+        ),
       );
+
+      setModalConfirmacaoAberto(false);
+      setServicoParaExcluir(null);
     } catch (error) {
       console.log("Erro ao excluir serviço:", error);
       setErro("Não foi possivel excluir o serviço.");
     } finally {
       setExcluindoId(null);
     }
+  }
+
+  function cancelarExclusao() {
+    setModalConfirmacaoAberto(false);
+    setServicoParaExcluir(null);
   }
 
   return (
@@ -283,7 +300,7 @@ export default function ServicosPage() {
             <table className={styles.tabela}>
               <thead>
                 <tr>
-                  <th>Nome</th>
+                  <th>Descrição</th>
                   <th>Preço</th>
                   <th>Duração</th>
                   <th>Ações</th>
@@ -369,7 +386,7 @@ export default function ServicosPage() {
               {erro && <p className={styles.mensagemErroModal}>{erro}</p>}
 
               <label htmlFor="nome" className={styles.campo}>
-                Nome
+                Descrição
                 <input
                   id="nome"
                   name="nome"
@@ -421,6 +438,17 @@ export default function ServicosPage() {
           </section>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={modalConfirmacaoAberto}
+        titulo="Confirmar Exclusão"
+        mensagem={`Deseja realmente excluir o serviço ${servicoParaExcluir?.nome}?`}
+        textoBotaoOk="Excluir"
+        textoBotaoCancelar="Cancelar"
+        onConfirmar={confirmarExclusao}
+        onCancelar={cancelarExclusao}
+        carregando={excluindoId !== null}
+      />
     </div>
   );
 }
