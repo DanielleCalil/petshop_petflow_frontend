@@ -110,7 +110,11 @@ function desformatarMoeda(valor) {
 
 function formatarData(dataStr) {
   if (!dataStr) return "-";
-  const data = new Date(dataStr);
+  let dataSegura = String(dataStr);
+  if (dataSegura.length === 10 && dataSegura.includes("-")) {
+    dataSegura = `${dataSegura}T12:00:00`;
+  }
+  const data = new Date(dataSegura);
   if (isNaN(data.getTime())) return dataStr;
   return new Intl.DateTimeFormat("pt-BR").format(data);
 }
